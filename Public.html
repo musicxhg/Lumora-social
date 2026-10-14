@@ -1,0 +1,819 @@
+```html
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lumora — Международная социальная сеть</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Custom scrollbar hiding for cleaner reels/shorts */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-300">
+
+    <!-- HEADER -->
+    <header class="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <button id="sidebarToggle" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 lg:hidden">
+                <i data-lucide="menu" class="w-6 h-6"></i>
+            </button>
+            <div class="flex items-center space-x-2 cursor-pointer" onclick="switchTab('feed')">
+                <div class="bg-gradient-to-tr from-indigo-500 to-violet-500 p-2 rounded-xl text-white shadow-lg shadow-indigo-500/30">
+                    <i data-lucide="sparkles" class="w-5 h-5"></i>
+                </div>
+                <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">LUMORA</span>
+            </div>
+        </div>
+
+        <!-- Search bar -->
+        <div class="hidden md:flex items-center flex-1 max-w-md mx-6">
+            <div class="relative w-full">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                    <i data-lucide="search" class="w-4 h-4"></i>
+                </span>
+                <input type="text" id="globalSearch" placeholder="Поиск видео, авторов, постов..." class="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-indigo-500 rounded-xl text-sm focus:outline-none transition-all">
+            </div>
+        </div>
+
+        <!-- Right actions -->
+        <div class="flex items-center space-x-2">
+            <!-- Language Selector -->
+            <select id="langSelect" onchange="changeLanguage(this.value)" class="bg-slate-100 dark:bg-slate-800 text-xs font-medium rounded-lg px-2.5 py-1.5 border-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+                <option value="ru">RU</option>
+                <option value="en">EN</option>
+                <option value="uz">UZ</option>
+                <option value="kk">KK</option>
+            </select>
+
+            <!-- Theme Toggle -->
+            <button onclick="toggleTheme()" class="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                <i id="themeIcon" data-lucide="moon" class="w-5 h-5"></i>
+            </button>
+
+            <!-- Notifications Center -->
+            <button onclick="openNotifications()" class="relative p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                <i data-lucide="bell" class="w-5 h-5"></i>
+                <span class="absolute top-2 right-2 w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></span>
+            </button>
+
+            <!-- Profile Avatar button -->
+            <button onclick="switchTab('profile')" class="flex items-center space-x-2 pl-2">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop" alt="Profile" class="w-9 h-9 rounded-xl object-cover ring-2 ring-indigo-500/50">
+            </button>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <!-- SIDEBAR (Desktop) -->
+        <aside class="hidden lg:flex flex-col w-64 border-r border-slate-200 dark:border-slate-800 p-4 space-y-6 bg-white dark:bg-slate-900 overflow-y-auto">
+            <nav class="space-y-1.5">
+                <button onclick="switchTab('feed')" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-sm transition-all text-indigo-600 bg-indigo-50 dark:bg-indigo-950/50 dark:text-indigo-400" data-tab="feed">
+                    <i data-lucide="home" class="w-5 h-5"></i>
+                    <span data-i18n="nav_feed">Главная</span>
+                </button>
+                <button onclick="switchTab('shorts')" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-sm transition-all text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800" data-tab="shorts">
+                    <i data-lucide="play-square" class="w-5 h-5"></i>
+                    <span data-i18n="nav_shorts">Shorts</span>
+                </button>
+                <button onclick="openCreateModal()" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-sm transition-all bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:opacity-95">
+                    <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                    <span data-i18n="nav_create">Создать</span>
+                </button>
+                <button onclick="switchTab('subscriptions')" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-sm transition-all text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800" data-tab="subscriptions">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                    <span data-i18n="nav_subs">Подписки</span>
+                </button>
+                <button onclick="switchTab('messages')" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-sm transition-all text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800" data-tab="messages">
+                    <i data-lucide="message-square" class="w-5 h-5"></i>
+                    <span data-i18n="nav_messages">Сообщения</span>
+                </button>
+                <button onclick="switchTab('studio')" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-sm transition-all text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800" data-tab="studio">
+                    <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                    <span data-i18n="nav_studio">Студия автора</span>
+                </button>
+                <button onclick="switchTab('ai_studio')" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-sm transition-all text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800" data-tab="ai_studio">
+                    <i data-lucide="cpu" class="w-5 h-5"></i>
+                    <span data-i18n="nav_ai">Lumora AI Studio</span>
+                </button>
+                <button onclick="switchTab('profile')" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-sm transition-all text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800" data-tab="profile">
+                    <i data-lucide="user" class="w-5 h-5"></i>
+                    <span data-i18n="nav_profile">Профиль</span>
+                </button>
+            </nav>
+
+            <div class="pt-4 border-t border-slate-200 dark:border-slate-800">
+                <h4 class="text-xs font-semibold uppercase text-slate-400 tracking-wider mb-3 px-3" data-i18n="sidebar_subscriptions">Подписки</h4>
+                <div id="sidebarSubs" class="space-y-1">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT CONTAINER -->
+        <main class="flex-1 overflow-y-auto pb-20 lg:pb-6">
+            
+            <!-- TAB 1: FEED & TABS -->
+            <div id="tab-feed" class="tab-content max-w-4xl mx-auto p-4 md:p-6 space-y-6">
+                <!-- Feed Filter Tabs -->
+                <div class="flex items-center space-x-2 overflow-x-auto pb-2 no-scrollbar">
+                    <button onclick="filterFeed('all')" class="feed-filter px-4 py-2 rounded-xl text-sm font-medium bg-indigo-600 text-white shadow-md shadow-indigo-500/20 whitespace-nowrap" data-filter="all" data-i18n="filter_foryou">Для тебя</button>
+                    <button onclick="filterFeed('subs')" class="feed-filter px-4 py-2 rounded-xl text-sm font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 whitespace-nowrap hover:bg-slate-200 dark:hover:bg-slate-700" data-filter="subs" data-i18n="filter_subs">Подписки</button>
+                    <button onclick="filterFeed('new')" class="feed-filter px-4 py-2 rounded-xl text-sm font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 whitespace-nowrap hover:bg-slate-200 dark:hover:bg-slate-700" data-filter="new" data-i18n="filter_new">Новое</button>
+                    <button onclick="filterFeed('trending')" class="feed-filter px-4 py-2 rounded-xl text-sm font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 whitespace-nowrap hover:bg-slate-200 dark:hover:bg-slate-700" data-filter="trending" data-i18n="filter_popular">Популярное</button>
+                </div>
+
+                <!-- Stories / Status bar -->
+                <div class="flex space-x-3 overflow-x-auto pb-3 no-scrollbar" id="storiesContainer">
+                    <!-- Populated via JS -->
+                </div>
+
+                <!-- Feed Posts & Videos Stream -->
+                <div id="postsFeed" class="space-y-6">
+                    <!-- Cards populated via JS -->
+                </div>
+            </div>
+
+            <!-- TAB 2: SHORTS -->
+            <div id="tab-shorts" class="tab-content hidden h-[calc(100vh-65px)] lg:h-full flex justify-center items-center bg-black">
+                <div id="shortsContainer" class="w-full max-w-sm h-full max-h-[800px] relative overflow-y-scroll snap-y snap-mandatory no-scrollbar rounded-2xl shadow-2xl bg-slate-900">
+                    <!-- Shorts items populated via JS -->
+                </div>
+            </div>
+
+            <!-- TAB 3: SUBSCRIPTIONS -->
+            <div id="tab-subscriptions" class="tab-content hidden max-w-4xl mx-auto p-4 md:p-6 space-y-6">
+                <h2 class="text-2xl font-bold" data-i18n="nav_subs">Подписки</h2>
+                <div id="subscriptionsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+
+            <!-- TAB 4: MESSAGES -->
+            <div id="tab-messages" class="tab-content hidden h-[calc(100vh-65px)] flex flex-col md:flex-row bg-white dark:bg-slate-900">
+                <!-- Chat sidebar -->
+                <div class="w-full md:w-80 border-r border-slate-200 dark:border-slate-800 flex flex-col h-full">
+                    <div class="p-4 border-b border-slate-200 dark:border-slate-800">
+                        <h3 class="font-bold text-lg" data-i18n="nav_messages">Сообщения</h3>
+                        <input type="text" placeholder="Поиск чатов..." class="w-full mt-2 px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm focus:outline-none">
+                    </div>
+                    <div id="chatList" class="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/50">
+                        <!-- Chat previews -->
+                    </div>
+                </div>
+                <!-- Chat window -->
+                <div class="hidden md:flex flex-1 flex-col h-full bg-slate-50 dark:bg-slate-950" id="chatWindowArea">
+                    <div class="p-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <img id="activeChatAvatar" src="" class="w-10 h-10 rounded-full object-cover">
+                            <div>
+                                <h4 id="activeChatName" class="font-bold text-sm">Выберите чат</h4>
+                                <span class="text-xs text-emerald-500 font-medium">в сети</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3">
+                        <!-- Messages -->
+                    </div>
+                    <div class="p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center space-x-2">
+                        <input type="text" id="chatInput" placeholder="Написать сообщение..." class="flex-1 px-4 py-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm focus:outline-none">
+                        <button onclick="sendMessage()" class="p-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors">
+                            <i data-lucide="send" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 5: CREATOR STUDIO -->
+            <div id="tab-studio" class="tab-content hidden max-w-5xl mx-auto p-4 md:p-6 space-y-6">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold" data-i18n="studio_title">Студия автора</h2>
+                        <p class="text-sm text-slate-500">Управление контентом и аналитика канала Lumora</p>
+                    </div>
+                    <button onclick="openCreateModal()" class="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium shadow-lg shadow-indigo-500/20 hover:bg-indigo-700">Загрузить контент</button>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <span class="text-sm font-medium text-slate-500">Просмотры за 28 дней</span>
+                        <h3 class="text-2xl font-bold mt-1">245,890</h3>
+                        <span class="text-xs text-emerald-500 font-semibold mt-2 inline-block">↑ 14.2% по сравнению с прошлым месяцем</span>
+                    </div>
+                    <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <span class="text-sm font-medium text-slate-500">Время просмотра (часы)</span>
+                        <h3 class="text-2xl font-bold mt-1">12,450</h3>
+                        <span class="text-xs text-emerald-500 font-semibold mt-2 inline-block">↑ 8.1%</span>
+                    </div>
+                    <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <span class="text-sm font-medium text-slate-500">Новые подписчики</span>
+                        <h3 class="text-2xl font-bold mt-1">+3,420</h3>
+                        <span class="text-xs text-emerald-500 font-semibold mt-2 inline-block">↑ 22.5%</span>
+                    </div>
+                    <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <span class="text-sm font-medium text-slate-500">Доход Lumora (монетизация)</span>
+                        <h3 class="text-2xl font-bold mt-1">$1,245.80</h3>
+                        <span class="text-xs text-emerald-500 font-semibold mt-2 inline-block">Выплаты активны</span>
+                    </div>
+                </div>
+
+                <!-- Videos list in Studio -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6">
+                    <h3 class="text-lg font-bold mb-4">Ваши публикации</h3>
+                    <div id="studioVideosList" class="divide-y divide-slate-100 dark:divide-slate-800">
+                        <!-- Populated via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 6: LUMORA AI STUDIO -->
+            <div id="tab-ai_studio" class="tab-content hidden max-w-4xl mx-auto p-4 md:p-6 space-y-6">
+                <div class="bg-gradient-to-r from-indigo-600 to-violet-600 rounded-2xl p-6 text-white shadow-xl">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <div class="p-2.5 bg-white/10 rounded-xl backdrop-blur-md">
+                            <i data-lucide="cpu" class="w-6 h-6"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold">Lumora AI Studio (Gemini Engine)</h2>
+                    </div>
+                    <p class="text-indigo-100 text-sm max-w-2xl">Автоматически генерируйте вирусные названия, оптимизируйте описания, создавайте хэштеги и глубоко анализируйте вовлеченность аудитории с помощью искусственного интеллекта.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+                        <h3 class="font-bold text-lg">Генератор контента</h3>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-slate-400 mb-1">Тема или идея видео</label>
+                            <input type="text" id="aiPromptInput" placeholder="Например: Как создать стартап на ИИ..." class="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm focus:outline-none">
+                        </div>
+                        <button onclick="runAIGeneration()" class="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium text-sm shadow-lg shadow-indigo-500/20 hover:bg-indigo-700 transition-colors flex items-center justify-center space-x-2">
+                            <i data-lucide="sparkles" class="w-4 h-4"></i>
+                            <span>Сгенерировать с Gemini AI</span>
+                        </button>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col">
+                        <h3 class="font-bold text-lg mb-2">Результат анализа</h3>
+                        <div id="aiOutputResult" class="flex-1 bg-slate-100 dark:bg-slate-800/50 p-4 rounded-xl text-sm font-mono whitespace-pre-wrap overflow-y-auto max-h-60 text-slate-600 dark:text-slate-300">
+                            Здесь появится сгенерированный ИИ-план, теги и заголовки...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 7: PROFILE -->
+            <div id="tab-profile" class="tab-content hidden max-w-4xl mx-auto p-4 md:p-6 space-y-6">
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 relative overflow-hidden">
+                    <div class="h-32 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 -mx-6 -mt-6 mb-6"></div>
+                    <div class="flex flex-col sm:flex-row items-center sm:items-end space-y-4 sm:space-y-0 sm:space-x-5 -mt-16 mb-4 relative z-10 px-2">
+                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop" class="w-28 h-28 rounded-2xl object-cover ring-4 ring-white dark:ring-slate-900 shadow-xl">
+                        <div class="text-center sm:text-left flex-1">
+                            <h2 class="text-2xl font-bold">Анна Смирнова</h2>
+                            <p class="text-sm text-slate-500">@annasmirnova • Создатель контента & разработчик</p>
+                        </div>
+                        <button class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium shadow-md shadow-indigo-500/20 hover:bg-indigo-700">Редактировать профиль</button>
+                    </div>
+                    <div class="flex justify-around sm:justify-start sm:space-x-8 py-4 border-t border-slate-100 dark:border-slate-800 text-center sm:text-left">
+                        <div>
+                            <span class="block text-xl font-bold">142.5K</span>
+                            <span class="text-xs text-slate-500">Подписчики</span>
+                        </div>
+                        <div>
+                            <span class="block text-xl font-bold">380</span>
+                            <span class="text-xs text-slate-500">Подписки</span>
+                        </div>
+                        <div>
+                            <span class="block text-xl font-bold">1.2M</span>
+                            <span class="text-xs text-slate-500">Лайки</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Posts Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4" id="userProfilePosts">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- MOBILE BOTTOM NAVIGATION -->
+    <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 flex justify-around items-center py-2.5 z-40 px-2">
+        <button onclick="switchTab('feed')" class="mobile-nav-btn flex flex-col items-center text-indigo-600 dark:text-indigo-400" data-tab="feed">
+            <i data-lucide="home" class="w-5 h-5"></i>
+            <span class="text-[10px] mt-1 font-medium" data-i18n="nav_feed">Главная</span>
+        </button>
+        <button onclick="switchTab('shorts')" class="mobile-nav-btn flex flex-col items-center text-slate-500 hover:text-indigo-600" data-tab="shorts">
+            <i data-lucide="play-square" class="w-5 h-5"></i>
+            <span class="text-[10px] mt-1 font-medium" data-i18n="nav_shorts">Shorts</span>
+        </button>
+        <button onclick="openCreateModal()" class="flex items-center justify-center w-11 h-11 bg-gradient-to-r from-indigo-600 to-violet-600 rounded-full text-white shadow-lg shadow-indigo-500/30">
+            <i data-lucide="plus" class="w-6 h-6"></i>
+        </button>
+        <button onclick="switchTab('messages')" class="mobile-nav-btn flex flex-col items-center text-slate-500 hover:text-indigo-600" data-tab="messages">
+            <i data-lucide="message-square" class="w-5 h-5"></i>
+            <span class="text-[10px] mt-1 font-medium" data-i18n="nav_messages">Чаты</span>
+        </button>
+        <button onclick="switchTab('profile')" class="mobile-nav-btn flex flex-col items-center text-slate-500 hover:text-indigo-600" data-tab="profile">
+            <i data-lucide="user" class="w-5 h-5"></i>
+            <span class="text-[10px] mt-1 font-medium" data-i18n="nav_profile">Профиль</span>
+        </button>
+    </nav>
+
+    <!-- CREATE MODAL -->
+    <div id="createModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-6 space-y-6 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in duration-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-bold" data-i18n="modal_create_title">Создать публикацию</h3>
+                <button onclick="closeCreateModal()" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <button onclick="alertAction('Загрузка длинного видео')" class="flex flex-col items-center justify-center p-4 bg-slate-50 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 rounded-2xl border border-slate-200 dark:border-slate-700 transition-all">
+                    <i data-lucide="video" class="w-7 h-7 mb-2 text-indigo-500"></i>
+                    <span class="text-xs font-semibold">Видео</span>
+                </button>
+                <button onclick="alertAction('Создание Shorts')" class="flex flex-col items-center justify-center p-4 bg-slate-50 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 rounded-2xl border border-slate-200 dark:border-slate-700 transition-all">
+                    <i data-lucide="smartphone" class="w-7 h-7 mb-2 text-indigo-500"></i>
+                    <span class="text-xs font-semibold">Shorts</span>
+                </button>
+                <button onclick="alertAction('Новый пост')" class="flex flex-col items-center justify-center p-4 bg-slate-50 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 rounded-2xl border border-slate-200 dark:border-slate-700 transition-all">
+                    <i data-lucide="file-text" class="w-7 h-7 mb-2 text-indigo-500"></i>
+                    <span class="text-xs font-semibold">Пост</span>
+                </button>
+                <button onclick="alertAction('Прямой эфир')" class="flex flex-col items-center justify-center p-4 bg-slate-50 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 rounded-2xl border border-slate-200 dark:border-slate-700 transition-all">
+                    <i data-lucide="radio" class="w-7 h-7 mb-2 text-rose-500"></i>
+                    <span class="text-xs font-semibold">Трансляция</span>
+                </button>
+                <button onclick="switchTab('ai_studio'); closeCreateModal();" class="flex flex-col items-center justify-center p-4 bg-slate-50 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 rounded-2xl border border-slate-200 dark:border-slate-700 transition-all">
+                    <i data-lucide="cpu" class="w-7 h-7 mb-2 text-purple-500"></i>
+                    <span class="text-xs font-semibold">AI Studio</span>
+                </button>
+                <button onclick="alertAction('Опрос аудитории')" class="flex flex-col items-center justify-center p-4 bg-slate-50 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 rounded-2xl border border-slate-200 dark:border-slate-700 transition-all">
+                    <i data-lucide="bar-chart-2" class="w-7 h-7 mb-2 text-indigo-500"></i>
+                    <span class="text-xs font-semibold">Опрос</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIDEO PLAYER MODAL WITH CHAPTERS -->
+    <div id="videoPlayerModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-0 md:p-6">
+        <div class="bg-white dark:bg-slate-900 rounded-none md:rounded-3xl max-w-5xl w-full h-full md:h-auto overflow-hidden flex flex-col md:flex-row shadow-2xl">
+            <!-- Video & Details -->
+            <div class="flex-1 flex flex-col bg-black">
+                <div class="relative aspect-video bg-slate-950 flex items-center justify-center">
+                    <img id="modalVideoThumb" src="" class="w-full h-full object-cover">
+                    <button class="absolute inset-0 m-auto w-16 h-16 bg-indigo-600/90 hover:bg-indigo-600 text-white rounded-full flex items-center justify-center shadow-2xl transition-transform hover:scale-110">
+                        <i data-lucide="play" class="w-8 h-8 fill-white ml-1"></i>
+                    </button>
+                </div>
+                <div class="p-4 bg-white dark:bg-slate-900 flex-1 overflow-y-auto">
+                    <h3 id="modalVideoTitle" class="text-lg font-bold">Название видео</h3>
+                    <div class="flex items-center justify-between mt-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+                        <div class="flex items-center space-x-3">
+                            <img id="modalAuthorAvatar" src="" class="w-10 h-10 rounded-full object-cover">
+                            <div>
+                                <h4 id="modalAuthorName" class="font-bold text-sm">Автор</h4>
+                                <span class="text-xs text-slate-500">124K подписчиков</span>
+                            </div>
+                        </div>
+                        <button class="px-4 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-xl hover:bg-indigo-700">Подписаться</button>
+                    </div>
+                    <!-- Chapters List -->
+                    <div class="mt-4">
+                        <h4 class="text-xs font-bold uppercase text-slate-400 mb-2">Главы видео</h4>
+                        <div id="modalChapters" class="space-y-1.5 text-xs">
+                            <!-- Populated via JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Comments Sidebar -->
+            <div class="w-full md:w-96 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 flex flex-col h-full">
+                <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                    <h4 class="font-bold text-sm">Комментарии (24)</h4>
+                    <button onclick="closeVideoModal()" class="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <div id="modalCommentsList" class="flex-1 p-4 overflow-y-auto space-y-3">
+                    <!-- Populated via JS -->
+                </div>
+                <div class="p-3 border-t border-slate-200 dark:border-slate-800 flex items-center space-x-2">
+                    <input type="text" id="commentInput" placeholder="Написать комментарий..." class="flex-1 px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs focus:outline-none">
+                    <button onclick="addComment()" class="p-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- MULTI-LANGUAGE DICTIONARY ---
+        const translations = {
+            ru: {
+                nav_feed: "Главная", nav_shorts: "Shorts", nav_create: "Создать", nav_subs: "Подписки",
+                nav_messages: "Сообщения", nav_studio: "Студия", nav_ai: "AI Studio", nav_profile: "Профиль",
+                filter_foryou: "Для тебя", filter_subs: "Подписки", filter_new: "Новое", filter_popular: "Популярное",
+                sidebar_subscriptions: "Подписки", studio_title: "Студия автора", modal_create_title: "Создать публикацию"
+            },
+            en: {
+                nav_feed: "Home", nav_shorts: "Shorts", nav_create: "Create", nav_subs: "Subscriptions",
+                nav_messages: "Messages", nav_studio: "Studio", nav_ai: "AI Studio", nav_profile: "Profile",
+                filter_foryou: "For You", filter_subs: "Subscriptions", filter_new: "New", filter_popular: "Trending",
+                sidebar_subscriptions: "Subscriptions", studio_title: "Creator Studio", modal_create_title: "Create Post"
+            },
+            uz: {
+                nav_feed: "Asosiy", nav_shorts: "Shorts", nav_create: "Yратиш", nav_subs: "Obunalar",
+                nav_messages: "Xabarlar", nav_studio: "Studiya", nav_ai: "AI Studio", nav_profile: "Profil",
+                filter_foryou: "Siz uchun", filter_subs: "Obunalar", filter_new: "Yangi", filter_popular: "Ommabop",
+                sidebar_subscriptions: "Obunalar", studio_title: "Muallif studiyasi", modal_create_title: "Nashr yaratish"
+            },
+            kk: {
+                nav_feed: "Басты", nav_shorts: "Shorts", nav_create: "Жасау", nav_subs: "Жазылымдар",
+                nav_messages: "Хабарлар", nav_studio: "Студия", nav_ai: "AI Studio", nav_profile: "Профиль",
+                filter_foryou: "Сіз үшін", filter_subs: "Жазылымдар", filter_new: "Жаңа", filter_popular: "Танымал",
+                sidebar_subscriptions: "Жазылымдар", studio_title: "Автор студиясы", modal_create_title: "Жариялау"
+            }
+        };
+
+        let currentLang = 'ru';
+
+        function changeLanguage(lang) {
+            currentLang = lang;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang][key]) {
+                    el.innerText = translations[lang][key];
+                }
+            });
+        }
+
+        // --- THEME TOGGLE ---
+        function toggleTheme() {
+            const html = document.documentElement;
+            html.classList.toggle('dark');
+            const isDark = html.classList.contains('dark');
+            const icon = document.getElementById('themeIcon');
+            icon.setAttribute('data-lucide', isDark ? 'moon' : 'sun');
+            lucide.createIcons();
+        }
+
+        // --- MOCK DATABASE ---
+        const mockSubscriptions = [
+            { name: "Tech Insider", avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&h=100&fit=crop", online: true },
+            { name: "Travel Vibes", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop", online: false },
+            { name: "Design Digest", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop", online: true },
+            { name: "Cyberpunk Hub", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop", online: true }
+        ];
+
+        const mockStories = [
+            { name: "Ваша история", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop", self: true },
+            { name: "Alex_Dev", avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop" },
+            { name: "Elena_Art", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop" },
+            { name: "Max_Tech", avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&h=150&fit=crop" },
+            { name: "Sophia_Vlog", avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&h=150&fit=crop" }
+        ];
+
+        const mockPosts = [
+            {
+                id: 1, type: 'video', author: 'Tech Insider', avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&h=100&fit=crop',
+                title: 'Будущее искусственного интеллекта в 2026 году: Полный разбор технологий',
+                description: 'Разбираем новые архитектуры нейросетей, мультимодальный анализ и квантовые вычисления...',
+                thumb: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&h=450&fit=crop',
+                views: '45.2K', time: '3 часа назад', likes: '3.4K', commentsCount: 128,
+                chapters: [{time: '00:00', title: 'Введение'}, {time: '03:15', title: 'Мультимодальность'}, {time: '11:40', title: 'Выводы'}]
+            },
+            {
+                id: 2, type: 'post', author: 'Design Digest', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
+                title: 'Тренды UI/UX интерфейсов на этот год',
+                description: 'Минимализм, иммерсивный стеклянный дизайн и глубокая адаптивность под любые устройства.',
+                thumb: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&h=450&fit=crop',
+                views: '12.8K', time: 'Вчера', likes: '1.2K', commentsCount: 45
+            }
+        ];
+
+        const mockShorts = [
+            { id: 1, author: 'Travel Vibes', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop', desc: 'Закат над Альпами 🏔️✨ #nature #travel', videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-city-traffic-in-athens-41582-large.mp4', likes: '24.5K' },
+            { id: 2, author: 'Cyberpunk Hub', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop', desc: 'Неоновый Токио ночью 🌃🤖 #cyberpunk #neon', videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-neon-lights-in-a-city-at-night-41584-large.mp4', likes: '56.1K' }
+        ];
+
+        const mockChats = [
+            { id: 1, name: 'Техническая поддержка Lumora', avatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&h=100&fit=crop', lastMsg: 'Ваш запрос успешно обработан!', time: '10:45' },
+            { id: 2, name: 'Alex_Dev', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop', lastMsg: 'Привет! Посмотрел твой новый ролик, супер!', time: 'Вчера' }
+        ];
+
+        // --- STREAMING_CHUNK:Rendering UI Components Dynamically... ---
+        function initApp() {
+            renderSidebarSubs();
+            renderStories();
+            renderFeed(mockPosts);
+            renderShorts();
+            renderChats();
+            renderStudioVideos();
+            renderProfilePosts();
+            lucide.createIcons();
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+            // Update desktop sidebar buttons
+            document.querySelectorAll('.sidebar-btn').forEach(btn => {
+                btn.classList.remove('text-indigo-600', 'bg-indigo-50', 'dark:bg-indigo-950/50', 'dark:text-indigo-400');
+                btn.classList.add('text-slate-600', 'dark:text-slate-400');
+                if(btn.getAttribute('data-tab') === tabId) {
+                    btn.classList.add('text-indigo-600', 'bg-indigo-50', 'dark:bg-indigo-950/50', 'dark:text-indigo-400');
+                    btn.classList.remove('text-slate-600', 'dark:text-slate-400');
+                }
+            });
+            window.scrollTo(0, 0);
+        }
+
+        function renderSidebarSubs() {
+            const container = document.getElementById('sidebarSubs');
+            container.innerHTML = mockSubscriptions.map(sub => `
+                <div class="flex items-center space-x-3 px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                    <div class="relative">
+                        <img src="${sub.avatar}" class="w-8 h-8 rounded-full object-cover">
+                        ${sub.online ? '<span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-white dark:ring-900"></span>' : ''}
+                    </div>
+                    <span class="text-sm font-medium truncate">${sub.name}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderStories() {
+            const container = document.getElementById('storiesContainer');
+            container.innerHTML = mockStories.map((story, idx) => `
+                <div class="flex flex-col items-center space-y-1 flex-shrink-0 cursor-pointer group">
+                    <div class="w-16 h-16 rounded-2xl p-0.5 bg-gradient-to-tr ${story.self ? 'from-slate-300 to-slate-400' : 'from-indigo-500 to-pink-500'} group-hover:scale-105 transition-transform">
+                        <img src="${story.avatar}" class="w-full h-full object-cover rounded-[14px] ring-2 ring-white dark:ring-slate-900">
+                    </div>
+                    <span class="text-xs font-medium truncate w-16 text-center">${story.name}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderFeed(posts) {
+            const container = document.getElementById('postsFeed');
+            container.innerHTML = posts.map(post => `
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <div class="p-4 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <img src="${post.avatar}" class="w-10 h-10 rounded-xl object-cover">
+                            <div>
+                                <h4 class="font-bold text-sm">${post.author}</h4>
+                                <span class="text-xs text-slate-500">${post.time}</span>
+                            </div>
+                        </div>
+                        <button class="text-slate-400 hover:text-slate-600">
+                            <i data-lucide="more-vertical" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    <div class="px-4 pb-2">
+                        <h3 class="font-bold text-base mb-1">${post.title}</h3>
+                        <p class="text-sm text-slate-600 dark:text-slate-300 mb-3">${post.description}</p>
+                    </div>
+                    <div class="relative aspect-video bg-slate-950 cursor-pointer group" onclick="openVideoModal(${post.id})">
+                        <img src="${post.thumb}" class="w-full h-full object-cover group-hover:opacity-95 transition-opacity">
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="w-14 h-14 bg-indigo-600/90 text-white rounded-full flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
+                                <i data-lucide="play" class="w-6 h-6 fill-white ml-0.5"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-4 flex items-center justify-between border-t border-slate-100 dark:border-slate-800/60 text-slate-500 text-sm">
+                        <div class="flex items-center space-x-4">
+                            <button onclick="alertAction('Лайк поставлен!')" class="flex items-center space-x-1.5 hover:text-indigo-600 transition-colors">
+                                <i data-lucide="heart" class="w-5 h-5"></i>
+                                <span class="font-semibold text-xs">${post.likes}</span>
+                            </button>
+                            <button onclick="openVideoModal(${post.id})" class="flex items-center space-x-1.5 hover:text-indigo-600 transition-colors">
+                                <i data-lucide="message-circle" class="w-5 h-5"></i>
+                                <span class="font-semibold text-xs">${post.commentsCount}</span>
+                            </button>
+                        </div>
+                        <button onclick="alertAction('Ссылка скопирована')" class="hover:text-indigo-600 transition-colors">
+                            <i data-lucide="share-2" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function renderShorts() {
+            const container = document.getElementById('shortsContainer');
+            container.innerHTML = mockShorts.map(short => `
+                <div class="w-full h-full snap-start relative flex flex-col justify-end p-6 bg-slate-950">
+                    <video src="${short.videoUrl}" autoplay loop muted class="absolute inset-0 w-full h-full object-cover"></video>
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                    <div class="relative z-10 flex items-end justify-between">
+                        <div class="space-y-2 pr-12">
+                            <div class="flex items-center space-x-3">
+                                <img src="${short.avatar}" class="w-10 h-10 rounded-full object-cover ring-2 ring-white">
+                                <span class="font-bold text-white text-sm">${short.author}</span>
+                            </div>
+                            <p class="text-sm text-slate-200">${short.desc}</p>
+                        </div>
+                        <div class="flex flex-col items-center space-y-4 text-white">
+                            <button onclick="alertAction('Лайк')" class="flex flex-col items-center space-y-1">
+                                <div class="p-3 bg-white/20 backdrop-blur-md rounded-full hover:bg-white/30"><i data-lucide="heart" class="w-6 h-6"></i></div>
+                                <span class="text-xs font-bold">${short.likes}</span>
+                            </button>
+                            <button onclick="alertAction('Комментарии')" class="flex flex-col items-center space-y-1">
+                                <div class="p-3 bg-white/20 backdrop-blur-md rounded-full hover:bg-white/30"><i data-lucide="message-circle" class="w-6 h-6"></i></div>
+                                <span class="text-xs font-bold">428</span>
+                            </button>
+                            <button onclick="alertAction('Поделиться')" class="p-3 bg-white/20 backdrop-blur-md rounded-full hover:bg-white/30">
+                                <i data-lucide="share-2" class="w-6 h-6"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderChats() {
+            const container = document.getElementById('chatList');
+            container.innerHTML = mockChats.map((chat, idx) => `
+                <div onclick="selectChat(${idx})" class="p-4 flex items-center space-x-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors">
+                    <img src="${chat.avatar}" class="w-12 h-12 rounded-full object-cover">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-bold text-sm truncate">${chat.name}</h4>
+                            <span class="text-[10px] text-slate-400">${chat.time}</span>
+                        </div>
+                        <p class="text-xs text-slate-500 truncate mt-0.5">${chat.lastMsg}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function selectChat(idx) {
+            const chat = mockChats[idx];
+            document.getElementById('activeChatName').innerText = chat.name;
+            document.getElementById('activeChatAvatar').src = chat.avatar;
+            document.getElementById('chatMessages').innerHTML = `
+                <div class="flex justify-start"><div class="bg-slate-200 dark:bg-slate-800 p-3 rounded-2xl text-xs max-w-xs">${chat.lastMsg}</div></div>
+            `;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            if(!input.value.trim()) return;
+            const container = document.getElementById('chatMessages');
+            container.innerHTML += `<div class="flex justify-end"><div class="bg-indigo-600 text-white p-3 rounded-2xl text-xs max-w-xs">${input.value}</div></div>`;
+            input.value = '';
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function renderStudioVideos() {
+            const container = document.getElementById('studioVideosList');
+            container.innerHTML = mockPosts.map(p => `
+                <div class="py-3 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <img src="${p.thumb}" class="w-16 h-10 object-cover rounded-lg">
+                        <div>
+                            <h4 class="font-bold text-sm truncate max-w-xs md:max-w-md">${p.title}</h4>
+                            <span class="text-xs text-slate-500">${p.views} просмотров • ${p.time}</span>
+                        </div>
+                    </div>
+                    <span class="px-2.5 py-1 bg-emerald-500/10 text-emerald-500 text-xs font-semibold rounded-lg">Активно</span>
+                </div>
+            `).join('');
+        }
+
+        function renderProfilePosts() {
+            const container = document.getElementById('userProfilePosts');
+            container.innerHTML = mockPosts.map(p => `
+                <div class="aspect-video bg-slate-900 rounded-2xl overflow-hidden relative group cursor-pointer" onclick="openVideoModal(${p.id})">
+                    <img src="${p.thumb}" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-semibold text-xs">
+                        ${p.views} просмотров
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- AI STUDIO GENERATOR ---
+        function runAIGeneration() {
+            const prompt = document.getElementById('aiPromptInput').value || "Развитие стартапов";
+            const output = document.getElementById('aiOutputResult');
+            output.innerText = "ИИ Gemini генерирует стратегию и контент-план...";
+            setTimeout(() => {
+                output.innerText = `✅ Успешно проанализировано через Gemini AI:
+• Рекомендованные заголовки:
+  1. "Как запустить ИИ-стартап в 2026 году с нуля"
+  2. "Секреты масштабирования проектов на генеративных нейросетях"
+• Оптимизированное описание: "В этом видео мы подробно разберем ключевые шаги..."
+• Релевантные теги: #lumora #ai #startup #tech #2026`;
+            }, 1000);
+        }
+
+        // --- MODALS ---
+        function openCreateModal() { document.getElementById('createModal').classList.remove('hidden'); }
+        function closeCreateModal() { document.getElementById('createModal').classList.add('hidden'); }
+
+        function openVideoModal(id) {
+            const post = mockPosts.find(p => p.id === id) || mockPosts[0];
+            document.getElementById('modalVideoTitle').innerText = post.title;
+            document.getElementById('modalVideoThumb').src = post.thumb;
+            document.getElementById('modalAuthorAvatar').src = post.avatar;
+            document.getElementById('modalAuthorName').innerText = post.author;
+
+            const chaptersContainer = document.getElementById('modalChapters');
+            chaptersContainer.innerHTML = post.chapters ? post.chapters.map(c => `
+                <div class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                    <span class="font-medium text-indigo-500">${c.time}</span>
+                    <span class="flex-1 ml-3 truncate">${c.title}</span>
+                </div>
+            `).join('') : '<span class="text-slate-400">Главы отсутствуют</span>';
+
+            const commentsContainer = document.getElementById('modalCommentsList');
+            commentsContainer.innerHTML = `
+                <div class="flex space-x-3 text-xs">
+                    <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=50&h=50&fit=crop" class="w-8 h-8 rounded-full object-cover">
+                    <div>
+                        <span class="font-bold">Иван Смирнов</span>
+                        <p class="text-slate-600 dark:text-slate-300 mt-0.5">Отличное видео! Очень познавательно 🔥</p>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('videoPlayerModal').classList.remove('hidden');
+        }
+
+        function closeVideoModal() { document.getElementById('videoPlayerModal').classList.add('hidden'); }
+
+        function addComment() {
+            const input = document.getElementById('commentInput');
+            if(!input.value.trim()) return;
+            const container = document.getElementById('modalCommentsList');
+            container.innerHTML += `
+                <div class="flex space-x-3 text-xs">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=50&h=50&fit=crop" class="w-8 h-8 rounded-full object-cover">
+                    <div>
+                        <span class="font-bold">Анна Смирнова</span>
+                        <p class="text-slate-600 dark:text-slate-300 mt-0.5">${input.value}</p>
+                    </div>
+                </div>
+            `;
+            input.value = '';
+        }
+
+        function alertAction(msg) {
+            console.log(msg);
+        }
+
+        function filterFeed(filter) {
+            document.querySelectorAll('.feed-filter').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-md', 'shadow-indigo-500/20');
+                btn.classList.add('bg-slate-100', 'dark:bg-slate-800', 'text-slate-600', 'dark:text-slate-400');
+                if(btn.getAttribute('data-filter') === filter) {
+                    btn.classList.add('bg-indigo-600', 'text-white', 'shadow-md', 'shadow-indigo-500/20');
+                    btn.classList.remove('bg-slate-100', 'dark:bg-slate-800', 'text-slate-600', 'dark:text-slate-400');
+                }
+            });
+        }
+
+        function openNotifications() {
+            alertAction('Центр уведомлений открыт');
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
+```
